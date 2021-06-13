@@ -46,6 +46,9 @@ cv2.namedWindow('Paint', cv2.WINDOW_AUTOSIZE)
 laser=0
 colour='green'
 
+no_screen = 0
+im_path = "E:/img" + str(no_screen) + ".jpeg"
+
 while True:
 
     ret, frame = cap.read()
@@ -135,6 +138,13 @@ while True:
         red_index = 0
         yellow_index = 0
         paintWindow[67:,:,:] = 255
+# If the 's' key is pressed then take screenshot 
+    if cv2.waitKey(1) & 0xFF == ord("s"):
+        cv2.imwrite(im_path, paintWindow)
+        print("screen shot saved")
+        no_screen += 1
+        im_path = "img" + str(no_screen) + ".jpeg"
+	
     if cv2.waitKey(1) & 0xFF == ord("q"):
         break
 
