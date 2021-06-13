@@ -47,7 +47,7 @@ laser=0
 colour='green'
 
 no_screen = 0
-im_path = "E:/img" + str(no_screen) + ".jpeg"
+im_path = "img" + str(no_screen) + ".jpeg"
 
 while True:
 
