@@ -46,7 +46,7 @@ class Hand_Detector():
         thresholded = cv2.threshold(diff, threshold, 255, cv2.THRESH_BINARY)[1]
 
         # get the contours in the thresholded image
-        (_,cnts, _) = cv2.findContours(thresholded.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        (cnts, _) = cv2.findContours(thresholded.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         # cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
 
@@ -93,11 +93,9 @@ class Hand_Detector():
                 else:
                     angle = 0
                 if angle > 149 and angle < 180:
-                    print("show")
-                    return thresholded
+                    return "show"
                 elif angle > 40 and angle < 86:
-                    print("close")
-                    return thresholded
+                    return "close"
                 else:
                     #print("none")
-                    return  thresholded
+                    return  "none"
