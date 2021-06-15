@@ -27,8 +27,15 @@ class AirBoardController():
         #cv2.putText(self.paintWindow, "CLEAR", (49, 33), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2, cv2.LINE_AA)
         #cv2.namedWindow('Paint', cv2.WINDOW_AUTOSIZE)
 
-        self.laser=0
+        self.laser = 1
         self.colour='green'
+        self.thickness = 2
+        
+    def setLaser(self):
+        self.laser = 0
+    def releseLaser(self):
+        print("not")
+        self.laser = 1
 
     def detect_pen(self,frame) :
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -46,8 +53,8 @@ class AirBoardController():
                 for k in range(1, len(points[i][j])):
                     if points[i][j][k - 1] is None or points[i][j][k] is None:
                         continue
-                    cv2.line(frame, points[i][j][k - 1], points[i][j][k], self.colors[i], 2)
-                    cv2.line(paintWindow, points[i][j][k - 1], points[i][j][k], self.colors[i], 2)
+                    cv2.line(frame, points[i][j][k - 1], points[i][j][k], self.colors[i], self.thickness)
+                    cv2.line(paintWindow, points[i][j][k - 1], points[i][j][k], self.colors[i], self.thickness)
         return frame , paintWindow
     def drawFrame(self,frame):
         frame = cv2.flip(frame, 1)
@@ -55,7 +62,7 @@ class AirBoardController():
             self.paintWindow[:,:,:] = 255
         cnts,_ = self.detect_pen(frame)
         center = None
-
+        x, y = 0 , 0
         if len(cnts) > 0:
             
             cnt = sorted(cnts, key = cv2.contourArea, reverse = True)[0]
@@ -117,7 +124,7 @@ class AirBoardController():
             frame , self.paintWindow = self.draw(frame,self.paintWindow,points)
 
         # retuen all the windows
-        return frame , self.paintWindow
+        return frame , self.paintWindow , (x, y)
 
 # controller = AirBoardController()
 # cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
