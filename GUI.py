@@ -49,7 +49,7 @@ class MyWindow(QMainWindow):
 
                 self.MenuVisable = False
                 
-                self.Hand_Detector = Hand_Detector((10, 0, 225, 200))
+                self.Hand_Detector = Hand_Detector((10, 350, 225, 500))
                 self.init_ui()
         def ShowMenu(self):
             if self.MenuVisable == False:
@@ -68,15 +68,17 @@ class MyWindow(QMainWindow):
             if y in range(20,50):
                 thickness = x/self.camera_screen.width()
                 self.get_thickness(thickness)
-                self.ThicknessSlider.setValue(thickness*100)
+                self.ThicknessSlider.setValue(thickness*150)
             elif y in range(100,130):
                 self.get_color(x/self.camera_screen.width())
         def Stream_Webcam(self):
                 ret, image = self.cap.read()
-                #simage     = cv2.flip(image, 1)
+                #image = cv2.flip(image, 1)
                 Hand = self.Hand_Detector.detect(image)
+                if Hand is not None:
+                    cv2.imshow("screen", Hand)
                 # convert image to RGB format
-                frame , paintWindow , (x, y) = self.AirBoard.drawFrame(image)
+                frame, paintWindow , (x, y) = self.AirBoard.drawFrame(image)
                 
                 if self.MenuVisable == True :
                     if keyboard.is_pressed('z'):
@@ -100,7 +102,7 @@ class MyWindow(QMainWindow):
                 # if timer is stopped
                 if not self.timer.isActive():
                     # create video capture
-                    self.cap = cv2.VideoCapture(1)
+                    self.cap = cv2.VideoCapture(0)
                     # start timer
                     self.timer.start(20)
                     # update control_bt text

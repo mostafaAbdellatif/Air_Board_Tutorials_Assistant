@@ -55,7 +55,7 @@ while True:
     frame = cv2.flip(frame, 1)
     if laser ==1:
         paintWindow[:,:,:] = 255
-    cnts,_ = detect_pen(frame)
+    _,cnts,_ = detect_pen(frame)
     center = None
  
 

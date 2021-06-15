@@ -60,7 +60,7 @@ class AirBoardController():
         frame = cv2.flip(frame, 1)
         if self.laser == 1:
             self.paintWindow[:,:,:] = 255
-        cnts,_ = self.detect_pen(frame)
+        _,cnts,_ = self.detect_pen(frame)
         center = None
         x, y = 0 , 0
         if len(cnts) > 0:

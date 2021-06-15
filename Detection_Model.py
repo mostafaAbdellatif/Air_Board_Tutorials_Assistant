@@ -46,7 +46,7 @@ class Hand_Detector():
         thresholded = cv2.threshold(diff, threshold, 255, cv2.THRESH_BINARY)[1]
 
         # get the contours in the thresholded image
-        (cnts, _) = cv2.findContours(thresholded.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        (_,cnts, _) = cv2.findContours(thresholded.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         # cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE
 
@@ -67,6 +67,7 @@ class Hand_Detector():
         # increment the number of frames
         self.num_frames += 1
         # get the ROI
+        frame = cv2.flip(frame, 1)
         roi = frame[self.top:self.bottom, self.right:self.left]
         # convert the roi to grayscale and blur it
         gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
@@ -88,9 +89,15 @@ class Hand_Detector():
                 cv2.drawContours(frame.copy(), [segmented + (self.right, self.top)], -1, (0, 0, 255))
                 if len(segmented) > 5:
                     _, _, angle = cv2.fitEllipse(np.array(segmented))
+                    #print(angle)
                 else:
                     angle = 0
-                if angle > 149 and angle < 171:
-                    return "show menu"
-                elif angle > 75 and angle < 86:
-                    return "close menu"
+                if angle > 149 and angle < 180:
+                    print("show")
+                    return thresholded
+                elif angle > 40 and angle < 86:
+                    print("close")
+                    return thresholded
+                else:
+                    #print("none")
+                    return  thresholded
