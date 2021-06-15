@@ -2,16 +2,18 @@ import sys,os
 import time
 import numpy as np
 import cv2
+import keyboard
 from PyQt5 import uic
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QTextEdit, QFileDialog,QShortcut
-from PyQt5.QtCore import QTimer, QTime, Qt, QDate, QDateTime
-from PyQt5.QtGui import QColor, QKeySequence,QPixmap,QImage
+from PyQt5.QtCore import QTimer, QTime, Qt, QDate, QDateTime , QPropertyAnimation , QEvent
+from PyQt5.QtGui import QColor, QKeySequence,QPixmap,QImage , QKeyEvent 
 
 #from Air_board import *
 from PIL import Image 
 from Air_board import *
 from Detection_Model import *
+#from SideWindow import *
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
     try:
@@ -27,8 +29,12 @@ class MyWindow(QMainWindow):
                 super(MyWindow, self).__init__()
                 # this will hide the title bar
                 #self.setWindowFlag(Qt.FramelessWindowHint)
-                uic.loadUi(resource_path("MainScreen.ui"), self)
+                uic.loadUi(resource_path("UI.ui"), self)
                 #self.setGeometry(0,0,1280,720)
+                self.MenuShow = QShortcut(QKeySequence("M"),self)
+                self.MenuShow.activated.connect(self.ShowMenu)
+                #self.MenuHide = QShortcut(QKeySequence("H"),self)
+                #self.MenuHide.activated.connect(lambda: SideWindow.HideMenu(self))
                 self.setWindowTitle("Air board")
                 self.cap = None
                 # create a timer
@@ -38,19 +44,48 @@ class MyWindow(QMainWindow):
                 # set control_bt callback clicked  function
                 self.EnableCamera.clicked.connect(self.controlTimer)
                 self.camera_screen.setScaledContents(True)
+                
                 self.AirBoard = AirBoardController()
+
+                self.MenuVisable = False
+                
                 self.Hand_Detector = Hand_Detector((10, 0, 225, 200))
                 self.init_ui()
-        
+        def ShowMenu(self):
+            if self.MenuVisable == False:
+                self.MenuVisable = True
+                self.ThicknessSlider.visable = True
+            else:
+                self.MenuVisable = False
+                self.ThicknessSlider.visable = False
         def init_ui(self):
                 return
+        def get_thickness(self,x):
+            self.AirBoard.thickness = int(x*10)
+        def get_color(self,x):
+            self.AirBoard.colour = 'green' if x < 0.3 else 'red'
+        def get_option(self,x,y):
+            if y in range(20,50):
+                thickness = x/self.camera_screen.width()
+                self.get_thickness(thickness)
+                self.ThicknessSlider.setValue(thickness*100)
+            elif y in range(100,130):
+                self.get_color(x/self.camera_screen.width())
         def Stream_Webcam(self):
                 ret, image = self.cap.read()
                 #simage     = cv2.flip(image, 1)
                 Hand = self.Hand_Detector.detect(image)
-                print(Hand)
                 # convert image to RGB format
-                frame , paintWindow = self.AirBoard.drawFrame(image)
+                frame , paintWindow , (x, y) = self.AirBoard.drawFrame(image)
+                
+                if self.MenuVisable == True :
+                    if keyboard.is_pressed('z'):
+                        self.get_option(x,y)
+                else :
+                    if keyboard.is_pressed('z'):
+                        self.AirBoard.laser = 0
+                    else:
+                        self.AirBoard.laser = 1
                 # convert frame to RGB format
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 # get image infos
