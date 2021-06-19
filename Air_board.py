@@ -15,18 +15,13 @@ class AirBoardController():
         self.colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (0, 255, 255)]
         self.colorIndex = 0
         #cap = cv2.VideoCapture(1)
-        self.bpoints = [deque(maxlen=self.lp*2)]
-        self.gpoints = [deque(maxlen=self.lp*2)]
-        self.rpoints = [deque(maxlen=self.lp*2)]
-        self.ypoints = [deque(maxlen=self.lp*2)]
-
 
         # Here is code for Canvas setup
         self.paintWindow = np.zeros((471,636,3)) + 255
         self.paintWindow = cv2.rectangle(self.paintWindow, (40,1), (140,65), (0,0,0), 2)
         #cv2.putText(self.paintWindow, "CLEAR", (49, 33), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2, cv2.LINE_AA)
         #cv2.namedWindow('Paint', cv2.WINDOW_AUTOSIZE)
-
+        self.lastPoint = (None,None)
         self.laser = 1
         self.colour='green'
         self.thickness = 2
@@ -47,29 +42,28 @@ class AirBoardController():
         Mask = cv2.dilate(Mask, self.kernel, iterations=1)
         return cv2.findContours(Mask.copy(), cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
         
-    def draw(self,frame,paintWindow,points):
-        for i in range(len(points)):
-            for j in range(len(points[i])):
-                for k in range(1, len(points[i][j])):
-                    if points[i][j][k - 1] is None or points[i][j][k] is None:
-                        continue
-                    cv2.line(frame, points[i][j][k - 1], points[i][j][k], self.colors[i], self.thickness)
-                    cv2.line(paintWindow, points[i][j][k - 1], points[i][j][k], self.colors[i], self.thickness)
-        return frame , paintWindow
+    def draw(self,point):
+        if self.colour == 'green':
+            cv2.line(self.paintWindow,self.lastPoint ,(point[0], point[1]), self.colors[1], self.thickness)
+        elif self.colour == 'red':
+            cv2.line(self.paintWindow,self.lastPoint , (point[0], point[1]), self.colors[2], self.thickness)
+        elif self.colour == 'blue':
+            cv2.line(self.paintWindow,self.lastPoint , (point[0], point[1]), self.colors[0], self.thickness)
+        else:
+            cv2.line(self.paintWindow,self.lastPoint , (point[0], point[1]), self.colors[3], self.thickness)
+        self.lastPoint = point
+
     def drawFrame(self,frame):
         frame = cv2.flip(frame, 1)
-        if self.laser == 1:
-            self.paintWindow[:,:,:] = 255
         cnts,_ = self.detect_pen(frame)
         center = None
         x, y = 0 , 0
         if len(cnts) > 0:
-            
             cnt = sorted(cnts, key = cv2.contourArea, reverse = True)[0]
             ((x, y), radius) = cv2.minEnclosingCircle(cnt)
             cv2.circle(frame, (int(x), int(y)), int(radius), (255, 255, 255), 2)
             if self.laser ==1:
-                cv2.circle(self.paintWindow, (int(x), int(y)), int(5), (0, 0, 255), 2)
+                cv2.circle(frame, (int(x), int(y)), int(5), (0, 0, 255), 2)
             M = cv2.moments(cnt)
             center = (int(M['m10'] / M['m00']), int(M['m01'] / M['m00']))
 
@@ -82,46 +76,24 @@ class AirBoardController():
             else :
                 colorIndex = 3 # Yellow
 
-            # Now checking if the user wants to click on any button above the screen 
-            if (center[1] <= 65) and (self.laser==0):
-                
-                if 40 <= center[0] <= 140: # Clear Button
-                    self.bpoints = [deque(maxlen=self.lp)]
-                    self.gpoints = [deque(maxlen=self.lp)]
-                    self.rpoints = [deque(maxlen=self.lp)]
-                    self.ypoints = [deque(maxlen=self.lp)]
-
-                    self.blue_index = 0
-                    self.green_index = 0
-                    self.red_index = 0
-                    self.yellow_index = 0
-
-                    self.paintWindow[67:,:,:] = 255
-
-            elif self.laser==0 :
-                if colorIndex == 0:
-                    self.bpoints[self.blue_index].appendleft(center)
-                elif colorIndex == 1:
-                    self.gpoints[self.green_index].appendleft(center)
-                elif colorIndex == 2:
-                    self.rpoints[self.red_index].appendleft(center)
-                elif colorIndex == 3:
-                    self.ypoints[self.yellow_index].appendleft(center)
-        # Append the next deques when nothing is detected to avoid messing up
-        elif self.laser==0:
-            self.bpoints.append(deque(maxlen=self.lp))
-            self.blue_index += 1
-            self.gpoints.append(deque(maxlen=self.lp))
-            self.green_index += 1
-            self.rpoints.append(deque(maxlen=self.lp))
-            self.red_index += 1
-            self.ypoints.append(deque(maxlen=self.lp))
-            self.yellow_index += 1
-
         # Draw lines of all the colors on the canvas and frame 
-        if self.laser ==0:
-            points = [self.bpoints, self.gpoints, self.rpoints, self.ypoints]
-            frame , self.paintWindow = self.draw(frame,self.paintWindow,points)
+        if self.laser == 0:
+            if self.lastPoint == (None,None):
+                self.lastPoint = (int(x), int(y))
+            self.draw((int(x), int(y)))
+        else :
+            self.lastPoint = (None,None)
 
-        # retuen all the windows
+        # return all the windows
+        self.paintWindow = cv2.resize(self.paintWindow,(frame.shape[1],frame.shape[0]))
+        ret, paintWindowMask = cv2.threshold(self.paintWindow[:,:,0], 0, 255, cv2.THRESH_BINARY)
+        frame[np.where(paintWindowMask == 0)] = self.paintWindow[np.where(paintWindowMask == 0)]
+        
         return frame , self.paintWindow , (x, y)
+'''a = AirBoardController()
+cap = cv2.VideoCapture(1)
+while 1:
+    ret,image = cap.read()
+    frame , paintWindow , (x, y)=a.drawFrame(image)
+    cv2.imshow("sd",frame)'''
+
