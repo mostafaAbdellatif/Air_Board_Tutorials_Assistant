@@ -67,6 +67,7 @@ class MyWindow(QMainWindow):
                 ret, image = self.cap.read()
                 #image = cv2.flip(image, 1)
                 Hand = self.Hand_Detector.detect(image)
+                Hand = "close"
                 if Hand == "show":
                     self.MenuVisable = 1
                 elif Hand == "close":
@@ -85,7 +86,7 @@ class MyWindow(QMainWindow):
                             if x < 0.3*w:
                                 self.AirBoard.colour = 'green'
                                 box_color = (0,255,0)
-                            elif x in range(int(0.3*w),int(0.6*w)) :
+                            elif int(x) in range(int(0.3*w),int(0.6*w)) :
                                 self.AirBoard.colour = 'red'
                                 box_color = (255,0,0)
                             else:
